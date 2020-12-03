@@ -10,7 +10,7 @@ class SubscriptionsController < ApplicationController
   end
 
   def limits
-    offlines = ['BTC']
+    offlines = offline_coins
     subs = Subscription.where(user_id: current_user.id)
     subs = subs.select {|sub|
       filtered_subs = offlines.select { | off |
@@ -38,13 +38,17 @@ class SubscriptionsController < ApplicationController
   protected
 
   def offline_coins
-    response = HTTParty.get("https://shapeshift.io/offlinecoins")
-    JSON.parse(response.body)
+    Rails.cache.fetch("offline_coins", {expires_in: 30.seconds}) {
+      response = HTTParty.get("https://shapeshift.io/offlinecoins")
+      JSON.parse(response.body)
+    }
   end
 
   def get_valid_pairs
-    response = HTTParty.get("https://shapeshift.io/validpairs")
-    response.body
+    Rails.cache.fetch("get_valid_pairs", {expires_in: 30.seconds}) {
+      response = HTTParty.get("https://shapeshift.io/validpairs")
+      response.body
+    }
   end
 
   # Only allow a trusted parameter "white list" through.
