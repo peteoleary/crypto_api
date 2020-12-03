@@ -14,7 +14,7 @@ class UsersController < ApplicationController
   def login
     @current_user = User.find_by(email: allow_params['email'])
     if @current_user
-      if allow_params['password'] == @current_user.password
+      if BCrypt::Password.new(@current_user.password) == allow_params['password']
         render json: { token: make_token, user: @current_user.attributes.except('token')}
       else
         render json: {message: 'unauthorized'}, status: 401
